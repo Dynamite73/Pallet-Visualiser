@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>3D Pallet Stack - W10091</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.148.0/examples/js/controls/OrbitControls.min.js"></script>
+<script>
+  const palletLength = 1200;
+  const palletWidth = 1200;
+  const boxLength = 385;
+  const boxWidth = 240;
+  const boxHeight = 230;
+  const boxesPerLayer = 15;
+  const layers = 5;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xf0f0f0);
+
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+  camera.position.set(1800, 1600, 1800);
+  camera.lookAt(scene.position);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  // Lighting
+  const light1 = new THREE.DirectionalLight(0xffffff, 1);
+  light1.position.set(1000, 2000, 1000);
+  scene.add(light1);
+
+  const light2 = new THREE.AmbientLight(0x404040);
+  scene.add(light2);
+
+  // Pallet base
+  const palletGeometry = new THREE.BoxGeometry(palletLength, 50, palletWidth);
+  const palletMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+  const pallet = new THREE.Mesh(palletGeometry, palletMaterial);
+  pallet.position.set(0, 25, 0);
+  scene.add(pallet);
+
+  // Boxes
+  const boxGeometry = new THREE.BoxGeometry(boxLength, boxHeight, boxWidth);
+  const boxMaterial = new THREE.MeshLambertMaterial({ color: 0x4682b4 });
+
+  let placed = 0;
+  for (let y = 0; y < layers; y++) {
+    let placedThisLayer = 0;
+    for (let x = -palletLength / 2 + boxLength / 2; x <= palletLength / 2 - boxLength / 2; x += boxLength) {
+      for (let z = -palletWidth / 2 + boxWidth / 2; z <= palletWidth / 2 - boxWidth / 2; z += boxWidth) {
+        if (placedThisLayer >= boxesPerLayer) break;
+        const box = new THREE.Mesh(boxGeometry, boxMaterial);
+        box.position.set(x, 50 + boxHeight / 2 + y * boxHeight, z);
+        scene.add(box);
+        placed++;
+        placedThisLayer++;
+      }
+      if (placedThisLayer >= boxesPerLayer) break;
+    }
+  }
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  animate();
+</script>
+</body>
+</html>
